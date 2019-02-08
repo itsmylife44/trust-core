@@ -30,7 +30,14 @@ public struct Function: Equatable, CustomStringConvertible {
 
     /// Function signature
     public var description: String {
-        let descriptions = parameters.map({ $0.description }).joined(separator: ",")
-        return "\(name)(\(descriptions))"
+        var string = "\(name)("
+        for param in parameters {
+            string += param.description + ","
+        }
+        if string.hasSuffix(",") {
+            string.removeLast()
+        }
+        string += ")"
+        return string
     }
 }

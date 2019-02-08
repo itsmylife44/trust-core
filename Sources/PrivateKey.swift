@@ -10,7 +10,7 @@ public final class PrivateKey: Hashable, CustomStringConvertible {
     /// Validates that raw data is a valid private key.
     static public func isValid(data: Data) -> Bool {
         // Check length
-        if data.count != Ethereum.privateKeySize && data.count != Bitcoin.privateKeySize {
+        if data.count != Ethereum.privateKeySize {
             return false
         }
 
@@ -56,47 +56,23 @@ public final class PrivateKey: Hashable, CustomStringConvertible {
         self.data = Data(data)
     }
 
-    /// Creates a `PrivateKey` from a Bitcoin WIF (wallet import format) string.
-    public init?(wif: String) {
-        guard let decoded = Crypto.base58Decode(wif) else {
-            return nil
-        }
-        if decoded[0] != 0x80 || decoded.last != 0x01 {
-            return nil
-        }
-        data = Data(decoded[1 ..< 33])
-    }
-
     deinit {
         // Clear memory
         data.clear()
     }
 
     /// Public key.
-    public func publicKey(for type: BlockchainType, compressed: Bool = false) -> PublicKey {
-        let pkData: Data
-        if compressed {
-            pkData = Crypto.getCompressedPublicKey(from: data)
-        } else {
-            pkData = Crypto.getPublicKey(from: data)
+    public func publicKey(for coin: Coin) -> PublicKey {
+        switch coin {
+        case .bitcoin:
+            return BitcoinPublicKey(data: Crypto.getPublicKey(from: data))!
+        case .ethereum,
+             .poa,
+             .ethereumClassic,
+             .callisto,
+             .gochain:
+            return EthereumPublicKey(data: Crypto.getPublicKey(from: data))!
         }
-
-        switch type {
-        case .bitcoin, .tron:
-            return BitcoinPublicKey(data: pkData)!
-        case .ethereum, .wanchain, .vechain:
-            return EthereumPublicKey(data: pkData)!
-        }
-    }
-
-    /// Signs a hash.
-    public func sign(hash: Data) -> Data {
-        return Crypto.sign(hash: hash, privateKey: data)
-    }
-
-    /// Signs a hash, encodes the result using DER.
-    public func signAsDER(hash: Data) -> Data {
-        return Crypto.signAsDER(hash: hash, privateKey: data)
     }
 
     public var description: String {

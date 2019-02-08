@@ -120,10 +120,29 @@ public final class ABIEncoder {
     ///
     /// - Throws: `ABIError.integerOverflow` if the value has more than 256 bits.
     public func encode(_ value: BigInt) throws {
-        guard let serialized = value.serialize(bitWidth: ABIEncoder.encodedIntSize) else {
+        let valueData = twosComplement(value)
+        if valueData.count > ABIEncoder.encodedIntSize {
             throw ABIError.integerOverflow
         }
-        data.append(serialized)
+
+        if value.sign == .plus {
+            data.append(Data(repeating: 0, count: ABIEncoder.encodedIntSize - valueData.count))
+        } else {
+            data.append(Data(repeating: 255, count: ABIEncoder.encodedIntSize - valueData.count))
+        }
+        data.append(valueData)
+    }
+
+    // Computes the two's complement for a `BigInt` with 256 bits
+    private func twosComplement(_ value: BigInt) -> Data {
+        let magnitude = value.magnitude
+        if value.sign == .plus {
+            return magnitude.serialize()
+        }
+
+        let serializedLength = magnitude.serialize().count
+        let max = BigUInt(1) << (serializedLength * 8)
+        return (max - magnitude).serialize()
     }
 
     /// Encodes a static or dynamic byte array
@@ -131,9 +150,8 @@ public final class ABIEncoder {
         if !`static` {
             try encode(bytes.count)
         }
-        let count = min(32, bytes.count)
-        let padding = ((count + 31) / 32) * 32 - count
-        data.append(bytes[0..<count])
+        let padding = ((bytes.count + 31) / 32) * 32 - bytes.count
+        data.append(bytes)
         data.append(Data(repeating: 0, count: padding))
     }
 

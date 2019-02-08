@@ -27,26 +27,14 @@ public struct RLP {
             return encodeInt(number)
         case let number as Int64:
             return encodeInt64(number)
-        case let number as UInt8:
-            return encodeUInt8(number)
-        case let number as UInt16:
-            return encodeUInt16(number)
-        case let number as UInt32:
-            return encodeUInt32(number)
         case let number as UInt64:
             return encodeUInt64(number)
         case let bigint as BigInt:
             return encodeBigInt(bigint)
         case let biguint as BigUInt:
             return encodeBigUInt(biguint)
-        case let transaction as EthereumTransaction:
+        case let transaction as Transaction:
             return encodeTransaction(transaction)
-        case let transaction as WanchainTransaction:
-            return encodeTransaction(transaction)
-        case let transaction as VechainTransaction:
-            return encodeTransaction(transaction)
-        case let clause as VechainClause:
-            return encodeClause(clause)
         case let data as Data:
             return encodeData(data)
         default:
@@ -72,18 +60,6 @@ public struct RLP {
     static func encodeUInt(_ number: UInt) -> Data? {
         let biguint = BigUInt(number)
         return encode(biguint)
-    }
-
-    static func encodeUInt8(_ number: UInt8) -> Data? {
-        return encode(BigUInt(number))
-    }
-
-    static func encodeUInt16(_ number: UInt16) -> Data? {
-        return encode(BigUInt(number))
-    }
-
-    static func encodeUInt32(_ number: UInt32) -> Data? {
-        return encode(BigUInt(number))
     }
 
     static func encodeInt64(_ number: Int64) -> Data? {
@@ -114,59 +90,18 @@ public struct RLP {
         return encodeData(encoded)
     }
 
-    static func encodeTransaction(_ transaction: EthereumTransaction) -> Data? {
+    static func encodeTransaction(_ transaction: Transaction) -> Data? {
         return encodeList([
             transaction.nonce,
             transaction.gasPrice,
             transaction.gasLimit,
-            transaction.to?.data ?? Data(),
+            transaction.to.data,
             transaction.amount,
             transaction.payload ?? Data(),
             transaction.v,
             transaction.r,
             transaction.s,
         ])
-    }
-
-    static func encodeTransaction(_ transaction: WanchainTransaction) -> Data? {
-        return encodeList([
-            transaction.type.rawValue,
-            transaction.transaction.nonce,
-            transaction.transaction.gasPrice,
-            transaction.transaction.gasLimit,
-            transaction.transaction.to?.data ?? Data(),
-            transaction.transaction.amount,
-            transaction.transaction.payload ?? Data(),
-            transaction.transaction.v,
-            transaction.transaction.r,
-            transaction.transaction.s,
-        ])
-    }
-
-    static func encodeTransaction(_ transaction: VechainTransaction) -> Data? {
-        var elements: [Any] = [
-            transaction.chainTag,
-            transaction.blockRef,
-            transaction.expiration,
-            transaction.clauses,
-            transaction.gasPriceCoef,
-            transaction.gas,
-            transaction.dependOn,
-            transaction.nonce,
-            transaction.reversed,
-        ]
-        if !transaction.signature.isEmpty {
-            elements.append(transaction.signature)
-        }
-        return encodeList(elements)
-    }
-
-    static func encodeClause(_ clause: VechainClause) -> Data {
-        return encodeList([
-            clause.to.data,
-            clause.value,
-            clause.data,
-        ])!
     }
 
     static func encodeData(_ data: Data) -> Data {

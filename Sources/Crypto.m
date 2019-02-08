@@ -17,27 +17,12 @@
     return publicKey;
 }
 
-+ (nonnull NSData *)getCompressedPublicKeyFrom:(nonnull NSData *)privateKey {
-    NSMutableData *publicKey = [[NSMutableData alloc] initWithLength:33];
-    ecdsa_get_public_key33(&secp256k1, privateKey.bytes, publicKey.mutableBytes);
-    return publicKey;
-}
-
 + (nonnull NSData *)signHash:(nonnull NSData *)hash privateKey:(nonnull NSData *)privateKey {
     NSMutableData *signature = [[NSMutableData alloc] initWithLength:65];
     uint8_t by = 0;
     ecdsa_sign_digest(&secp256k1, privateKey.bytes, hash.bytes, signature.mutableBytes, &by, nil);
     ((uint8_t *)signature.mutableBytes)[64] = by;
     return signature;
-}
-
-+ (nonnull NSData *)signAsDERHash:(nonnull NSData *)hash privateKey:(nonnull NSData *)privateKey {
-    NSMutableData *signature = [[NSMutableData alloc] initWithLength:64];
-    NSMutableData *der = [[NSMutableData alloc] initWithLength:72];
-    ecdsa_sign_digest(&secp256k1, privateKey.bytes, hash.bytes, signature.mutableBytes, nil, nil);
-    int len = ecdsa_sig_to_der(signature.bytes, der.mutableBytes);
-    [der setLength:len];
-    return der;
 }
 
 + (BOOL)verifySignature:(nonnull NSData *)signature message:(nonnull NSData *)message publicKey:(nonnull NSData *)publicKey {
@@ -56,12 +41,6 @@
     NSMutableData *result = [[NSMutableData alloc] initWithLength:SHA256_DIGEST_LENGTH];
     sha256_Raw(data.bytes, data.length, result.mutableBytes);
     return result;
-}
-
-+ (nonnull NSData *)blake2b256:(nonnull NSData *)hash {
-    NSMutableData *output = [[NSMutableData alloc] initWithLength:32];
-    blake2b(hash.bytes, (uint32_t)hash.length, output.mutableBytes, output.length);
-    return output;
 }
 
 + (nonnull NSData *)ripemd160:(nonnull NSData *)data {
@@ -91,18 +70,14 @@
     return [[NSString alloc] initWithBytesNoCopy:cstring length:size - 1 encoding:NSUTF8StringEncoding freeWhenDone:YES];
 }
 
-+ (NSData *)base58Decode:(nonnull NSString *)string {
++ (NSData *)base58Decode:(nonnull NSString *)string expectedSize:(NSInteger)expectedSize {
     const char *str = [string cStringUsingEncoding:NSUTF8StringEncoding];
 
-    size_t capacity = 128;
-    NSMutableData *result = [[NSMutableData alloc] initWithLength:capacity];
-
-    int size = base58_decode_check(str, HASHER_SHA2D, result.mutableBytes, (int)capacity);
-    if (size == 0) {
+    NSMutableData *result = [[NSMutableData alloc] initWithLength:expectedSize];
+    if (base58_decode_check(str, HASHER_SHA2D, result.mutableBytes, (int)expectedSize) == 0) {
         return nil;
     }
 
-    [result setLength:size];
     return result;
 }
 

@@ -20,12 +20,17 @@ public struct BitcoinAddress: Address, Hashable {
             return false
         }
 
+        // Verify address prefix
+        if !validAddressPrefixes.contains(data[0]) {
+            return false
+        }
+
         return true
     }
 
     /// Validates that the string is a valid address.
     static public func isValid(string: String) -> Bool {
-        guard let decoded = Crypto.base58Decode(string) else {
+        guard let decoded = Crypto.base58Decode(string, expectedSize: Bitcoin.addressSize + 1) else {
             return false
         }
 
@@ -34,8 +39,17 @@ public struct BitcoinAddress: Address, Hashable {
             return false
         }
 
+        // Verify address prefix
+        let prefix = decoded[0]
+        if !validAddressPrefixes.contains(prefix) {
+            return false
+        }
+
         return true
     }
+
+    /// Coin this address is for.
+    public let coin = Coin.bitcoin
 
     /// Raw representation of the address.
     public let data: Data
@@ -50,18 +64,14 @@ public struct BitcoinAddress: Address, Hashable {
 
     /// Creates an address from a string representation.
     public init?(string: String) {
-        guard let decoded = Crypto.base58Decode(string) else {
+        guard let decoded = Crypto.base58Decode(string, expectedSize: Bitcoin.addressSize + 1) else {
             return nil
         }
         self.init(data: decoded)
     }
 
-    public var base58String: String {
-        return Crypto.base58Encode(data)
-    }
-
     public var description: String {
-        return base58String
+        return Crypto.base58Encode(data)
     }
 
     public var hashValue: Int {

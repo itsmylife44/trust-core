@@ -13,22 +13,12 @@
 /// Extracts the public key from a private key.
 + (nonnull NSData *)getPublicKeyFrom:(nonnull NSData *)privateKey NS_SWIFT_NAME(getPublicKey(from:));
 
-/// Extracts the compressed public key from a private key.
-+ (nonnull NSData *)getCompressedPublicKeyFrom:(nonnull NSData *)privateKey NS_SWIFT_NAME(getCompressedPublicKey(from:));
-
 /// Signs a hash with a private key.
 ///
 /// @param hash hash to sign
 /// @param privateKey private key to use for signing
 /// @return signature is in the 65-byte [R || S || V] format where V is 0 or 1.
 + (nonnull NSData *)signHash:(nonnull NSData *)hash privateKey:(nonnull NSData *)privateKey NS_SWIFT_NAME(sign(hash:privateKey:));
-
-/// Signs a hash with a private key, encodes the result as DER.
-///
-/// @param hash hash to sign
-/// @param privateKey private key to use for signing
-/// @return signature in the DER format.
-+ (nonnull NSData *)signAsDERHash:(nonnull NSData *)hash privateKey:(nonnull NSData *)privateKey NS_SWIFT_NAME(signAsDER(hash:privateKey:));;
 
 /// Verifies a hash signature.
 ///
@@ -46,19 +36,16 @@
 /// Computes the SHA256 hash of the SHA256 hash of the data.
 + (nonnull NSData *)sha256sha256:(nonnull NSData *)data;
 
-/// Computes the Ethereum hash of a block of data (BLAKE2B256).
-+ (nonnull NSData *)blake2b256:(nonnull NSData *)hash;
-
 /// Computes the RIPEMD-160 hash of the SHA256 hash of the data.
 + (nonnull NSData *)sha256ripemd160:(nonnull NSData *)data;
 
 // MARK: - Base58
 
-/// Encodes data as a base 58 string, including the checksum.
+/// Encodes data as a base 58 string.
 + (nonnull NSString *)base58Encode:(nonnull NSData *)data NS_SWIFT_NAME(base58Encode(_:));
 
-/// Decodes a base 58 string verifying the checksum.
-+ (nullable NSData *)base58Decode:(nonnull NSString *)string NS_SWIFT_NAME(base58Decode(_:));
+/// Decodes a base 58 string.
++ (nullable NSData *)base58Decode:(nonnull NSString *)string expectedSize:(NSInteger)expectedSize NS_SWIFT_NAME(base58Decode(_:expectedSize:));
 
 // MARK: - HDWallet
 
