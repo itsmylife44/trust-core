@@ -15,5 +15,5 @@ public enum Coin: Int {
     case poa = 178
     case callisto = 820
     case gochain = 6060
-    case ellaism = 163
+    case ether1 = 1313114
 }
